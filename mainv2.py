@@ -3,7 +3,10 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from prompts import prompt
+from prompts import prompt 
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain_ollama import ChatOllama
 #-------------------------------------------------------------------------
 #DATA PREPROCESSING:
 #--------------
@@ -40,6 +43,26 @@ retriever =  vector_store.as_retriever(
     search_kwargs={"k": 3}
 )
 
-results = retriever.invoke('which is bigger canda or egypt')
-with open('out.txt', 'w', encoding='utf-8') as f:
-    f.write(str(results))
+# #Laoding ollama chat model
+chat_model = ChatOllama(model="llama3",
+                        temperature=0,
+                        )
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+#Forming the chain
+rag_chain = (
+    {'context' : retriever | format_docs, 'input' : RunnablePassthrough()}
+    | prompt
+    | chat_model
+    | StrOutputParser()
+)
+
+for chunk in rag_chain.stream("what is the capital of egypt"):
+    print(chunk, end="", flush=True)
+
+
+# results = retriever.invoke('which is bigger canda or egypt')
+# with open('out.txt', 'w', encoding='utf-8') as f:
+#     f.write(str(results))

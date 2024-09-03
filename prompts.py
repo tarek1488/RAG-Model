@@ -1,7 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 
 system_prompt = (
-    "You are an geographics assistant for question-answering tasks about countries. "
+    "You are an geographics assistant for question-answering tasks about countries."
 )
 human_prompt = (
     "Use the following pieces of retrieved context to answer this question {input}."
