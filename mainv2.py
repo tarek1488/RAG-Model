@@ -3,10 +3,11 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from prompts import prompt 
+from prompts import prompt, QUERY_PROMPT 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_ollama import ChatOllama
+from langchain.retrievers.multi_query import MultiQueryRetriever
 #-------------------------------------------------------------------------
 #DATA PREPROCESSING:
 #--------------
@@ -37,16 +38,18 @@ vector_store = Chroma.from_documents(
 #BUILDING THE RAG MODEL
 #-----------------------
 
-#intializing a retriever 
-retriever =  vector_store.as_retriever(
-    search_type = 'similarity',
-    search_kwargs={"k": 3}
-)
-
-# #Laoding ollama chat model
+# Laoding ollama chat model
 chat_model = ChatOllama(model="llama3",
                         temperature=0,
                         )
+
+#intializing a retriever 
+retriever = MultiQueryRetriever.from_llm(
+    vector_store.as_retriever(), 
+    chat_model,
+    prompt=QUERY_PROMPT
+)
+
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
@@ -54,12 +57,12 @@ def format_docs(docs):
 #Forming the chain
 rag_chain = (
     {'context' : retriever | format_docs, 'input' : RunnablePassthrough()}
-    | prompt
+    | prompt  
     | chat_model
     | StrOutputParser()
 )
 
-for chunk in rag_chain.stream("what is the capital of egypt"):
+for chunk in rag_chain.stream("what is the capital of Canada"):
     print(chunk, end="", flush=True)
 
 
