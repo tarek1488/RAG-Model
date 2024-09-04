@@ -60,13 +60,3 @@ rag_chain = (
     | chat_model
     | StrOutputParser()
 )
-
-while True:
-    msg = input('enter message: ')
-    if msg == 'q':
-        break
-    for chunk in rag_chain.stream(msg):
-        print(chunk, end="", flush=True)
-    
-
-
