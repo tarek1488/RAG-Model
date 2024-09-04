@@ -3,11 +3,11 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from prompts import prompt, QUERY_PROMPT 
+from prompts import prompt 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_ollama import ChatOllama
-from langchain.retrievers.multi_query import MultiQueryRetriever
+#from langchain.retrievers.multi_query import MultiQueryRetriever
 #-------------------------------------------------------------------------
 #DATA PREPROCESSING:
 #--------------
@@ -44,10 +44,9 @@ chat_model = ChatOllama(model="llama3",
                         )
 
 #intializing a retriever 
-retriever = MultiQueryRetriever.from_llm(
-    vector_store.as_retriever(), 
-    chat_model,
-    prompt=QUERY_PROMPT
+retriever =  vector_store.as_retriever(
+    search_type = 'similarity',
+    search_kwargs={"k": 6}
 )
 
 
@@ -62,10 +61,12 @@ rag_chain = (
     | StrOutputParser()
 )
 
-for chunk in rag_chain.stream("what is the capital of Canada"):
-    print(chunk, end="", flush=True)
+while True:
+    msg = input('enter message: ')
+    if msg == 'q':
+        break
+    for chunk in rag_chain.stream(msg):
+        print(chunk, end="", flush=True)
+    
 
 
-# results = retriever.invoke('which is bigger canda or egypt')
-# with open('out.txt', 'w', encoding='utf-8') as f:
-#     f.write(str(results))
