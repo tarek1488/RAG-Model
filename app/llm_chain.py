@@ -7,6 +7,7 @@ from .prompts import prompt
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_ollama import ChatOllama
+import os
 #from langchain.retrievers.multi_query import MultiQueryRetriever
 #-------------------------------------------------------------------------
 #DATA PREPROCESSING:
@@ -15,25 +16,40 @@ from langchain_ollama import ChatOllama
 #defining data path
 DATA_PATHS = r'data'
 
-#Intializing Loader
-loader = PyPDFDirectoryLoader(DATA_PATHS)
+#defining path to the vectorstore
+VECTOR_STORE_DIR = 'vectorstoreDB'
 
-#loading pdf
-docs = loader.load() #each page in the pdf loaded as Documnet object so docs will have number of Docmenst equal tp pages num in the pdf
+def load_db():
+    embedding = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    if not os.path.exists(VECTOR_STORE_DIR):
+        #Intializing Loader
+        loader = PyPDFDirectoryLoader(DATA_PATHS)
+        
+        #loading pdf
+        docs = loader.load() #each page in the pdf loaded as Documnet object so docs will have number of Docmenst equal tp pages num in the pdf
+                
+        #Intializing the text splitter to split data to chuncks to fit sequence window in chat models
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 
-print(f'the docs len is : ----------> {len(docs)}')
+        #splitting data
+        splits =  text_splitter.split_documents(docs)
+        
+        #Intializing chroma vectore store
+        vector_store =  Chroma(embedding_function=embedding,
+                               persist_directory=VECTOR_STORE_DIR)
+        
+        #Adding splits
+        vector_store.add_documents(splits)
 
-#Intializing the text splitter to split data to chuncks to fit sequence window in chat models
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    else:
+        vector_store = Chroma(persist_directory=VECTOR_STORE_DIR, embedding_function=embedding)
+    return vector_store
+        
 
-#splitting data
-splits =  text_splitter.split_documents(docs)
 
-#saving data in chroma vector store
-vector_store = Chroma.from_documents(
-    splits,
-    embedding=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-)
+    
+
+vector_store = load_db()
 #-------------------------------------------------------------------------------
 #BUILDING THE RAG MODEL
 #-----------------------
@@ -46,7 +62,7 @@ chat_model = ChatOllama(model="llama3",
 #intializing a retriever 
 retriever =  vector_store.as_retriever(
     search_type = 'similarity',
-    search_kwargs={"k": 6}
+    search_kwargs={"k": 5}
 )
 
 
