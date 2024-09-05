@@ -1,8 +1,8 @@
-
 from fastapi import FastAPI, HTTPException
 from llm_chain import rag_chain
 from pydantic import BaseModel
 import uvicorn
+from langserve import add_routes
 
 class Query(BaseModel):
     query : str 
@@ -13,6 +13,8 @@ app =  FastAPI(
     version='1.0',
     description='simple API for my RAG app'
 )
+
+
 
 @app.post("/query")
 async def get_results(input_query : Query):
