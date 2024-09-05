@@ -1,8 +1,7 @@
 from fastapi import FastAPI, HTTPException
-from llm_chain import rag_chain
+from .llm_chain import rag_chain
 from pydantic import BaseModel
 import uvicorn
-from langserve import add_routes
 
 class Query(BaseModel):
     query : str 
@@ -24,5 +23,3 @@ async def get_results(input_query : Query):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8000)
