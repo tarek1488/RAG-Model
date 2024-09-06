@@ -29,3 +29,15 @@ prompt = ChatPromptTemplate.from_messages(
 #     similarity search. Provide these alternative questions separated by newlines.
 #     Original question: {question}""",
 # )
+
+agent_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a helpful assistant. Make sure to use the tavily_search_results_json tool for information.",
+        ),
+        ("placeholder", "{chat_history}"),
+        ("human", "{input}"),
+        ("placeholder", "{agent_scratchpad}"),
+    ]
+)

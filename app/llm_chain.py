@@ -3,10 +3,13 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from .prompts import prompt 
+from prompts import prompt, agent_prompt
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_ollama import ChatOllama
+from langchain.tools.retriever import create_retriever_tool
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from notes import note_tool
 import os
 #from langchain.retrievers.multi_query import MultiQueryRetriever
 #-------------------------------------------------------------------------
@@ -55,7 +58,7 @@ vector_store = load_db()
 #-----------------------
 
 # Laoding ollama chat model
-chat_model = ChatOllama(model="llama3",
+chat_model = ChatOllama(model="llama3.1",
                         temperature=0,
                         )
 
@@ -65,14 +68,30 @@ retriever =  vector_store.as_retriever(
     search_kwargs={"k": 5}
 )
 
-
-def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
-
-#Forming the chain
-rag_chain = (
-    {'context' : retriever | format_docs, 'input' : RunnablePassthrough()}
-    | prompt  
-    | chat_model
-    | StrOutputParser()
+retriever_tool = create_retriever_tool(
+    retriever,
+    "search docs",
+    "Search for information about countries. For any questions about countries, you must use this tool!"
 )
+
+tools = [retriever_tool, note_tool]
+
+agent = create_tool_calling_agent(chat_model, tools, agent_prompt)
+
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+
+while (question := input("Ask a question about github issues (q to quit): ")) != "q":
+    result = agent_executor.invoke({"input": question})
+    print(result["output"])
+
+# def format_docs(docs):
+#     return "\n\n".join(doc.page_content for doc in docs)
+
+# #Forming the chain
+# rag_chain = (
+#     {'context' : retriever | format_docs, 'input' : RunnablePassthrough()}
+#     | prompt  
+#     | chat_model
+#     | StrOutputParser()
+# )
