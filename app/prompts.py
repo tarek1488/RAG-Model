@@ -34,7 +34,7 @@ agent_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are a helpful assistant. Make sure to use the tavily_search_results_json tool for information.",
+            "You are a helpful assistant.",
         ),
         ("placeholder", "{chat_history}"),
         ("human", "{input}"),
