@@ -1,23 +1,26 @@
 #first importing needed packages
 from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from .prompts import contextualize_q_prompt, qa_prompt
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
 from langchain.chains import create_history_aware_retriever
-from langchain_ollama import ChatOllama
-
+from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
-
 import os
 #from langchain.retrievers.multi_query import MultiQueryRetriever
 #-------------------------------------------------------------------------
+
+#Loading enviroment variables
+load_dotenv()
+
+#gettin openai API key
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 #Adding chat history parameters
 store = {}
@@ -34,10 +37,10 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
 DATA_PATHS = r'data'
 
 #defining path to the vectorstore
-VECTOR_STORE_DIR = 'vectorstoreDB'
+VECTOR_STORE_DIR = 'openaiDB'
 
 def load_db():
-    embedding = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embedding = OpenAIEmbeddings()
     if not os.path.exists(VECTOR_STORE_DIR):
         #Intializing Loader
         loader = PyPDFDirectoryLoader(DATA_PATHS)
@@ -72,9 +75,7 @@ vector_store = load_db()
 #-----------------------
 
 # Laoding ollama chat model
-chat_model = ChatOllama(model="llama3.1",
-                        temperature=0,
-                        )
+chat_model = ChatOpenAI()
 
 #intializing a retriever 
 retriever =  vector_store.as_retriever(
@@ -102,5 +103,3 @@ conversational_rag_chain = RunnableWithMessageHistory(
     history_messages_key="chat_history",
     output_messages_key="answer",
 )
-
-
