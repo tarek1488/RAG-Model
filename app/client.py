@@ -13,9 +13,7 @@ if 'session_id' not in st.session_state:
         session_id = session_data.get("session_id")
         # Store the session ID in Streamlit's session state
         st.session_state['session_id'] = session_id
-        st.success(f"Session ID: {session_id}")
-    else:
-        st.error("Failed to fetch session ID")
+        #st.success(f"Session ID: {session_id}")
 else:
     session_id = st.session_state['session_id']
 

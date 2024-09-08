@@ -28,7 +28,7 @@ async def get_session(request: Request, response: Response):
 async def get_results(input_query : Query):
     try:
         query_answer = conversational_rag_chain.invoke({"input": input_query.query}, config=input_query.config)
-        return {'answer' : query_answer}
+        return {'answer' : query_answer['answer']}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
