@@ -1,0 +1,24 @@
+# Ignore virtual environments
+.venv/
+
+# Ignore log files
+*.log
+
+# Ignore Python bytecode and cache
+*.pyc
+__pycache__/
+
+# Ignore git repository files
+.git/
+.gitignore
+
+# Ignore VSCode configuration files
+.vscode/
+
+# Add other common Python-specific ignores if needed
+env/
+*.egg-info/
+dist/
+build/
+
+app/llm_chain.py

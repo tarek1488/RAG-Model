@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Response, Request
-from .llm_chain import conversational_rag_chain
+from .openai_rag  import conversational_rag_chain
 from pydantic import BaseModel
 import uuid
 
